@@ -1,8 +1,9 @@
 #include "LRUCache.h"
+#include <ctime>
 
 using NodePtr = LRUNode*;
 
-LRUCache::LRUCache(int capacity) : _capacity(capacity){}
+LRUCache::LRUCache(int capacity, int ttl) : _capacity(capacity), _ttl(ttl){}
 
 LRUCache::~LRUCache() 
 {
@@ -20,6 +21,11 @@ int LRUCache::get(int key)
 {
 	if (_map.find(key) != _map.end()) {
 		NodePtr node = _map[key];
+		if (difftime(node->_expiredTime, time(nullptr)) <= 0)
+		{
+			remove(node);
+			return -1;
+		}
 		// 下面完成的是删除双向链表及 hash 中原有的点，并将该节点加入最近使用的表尾 R 的前驱操作
 		remove(node);
 		insert(node->_key, node->_value);
@@ -62,7 +68,7 @@ void LRUCache::remove(NodePtr node)
 
 void LRUCache::insert(int key, int value) 
 {
-	NodePtr node = new LRUNode(key, value);
+	NodePtr node = new LRUNode(key, value, time(nullptr)+_ttl);
 	_tail->_next = node;
 	node->_prev = _tail;
 	_tail = node;
