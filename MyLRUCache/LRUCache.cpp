@@ -43,7 +43,7 @@ void LRUCache::put(int key, int value, int ttl)
 		NodePtr node = _map[key];
 		// 下面完成的是删除双向链表及 hash 中原有的点，并将该节点更新 value 值后加入最近使用的表尾 R 的前驱操作
 		remove(node);
-		insert(node->_key, node->_value);
+		insert(node->_key, node->_value, ttl);
 	}
 	else {
 		// key does not exist, create new node
