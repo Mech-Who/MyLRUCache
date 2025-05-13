@@ -2,9 +2,18 @@
 
 using NodePtr = LRUNode*;
 
-LRUCache::LRUCache(int capacity) : _capacity(capacity)
-{
+LRUCache::LRUCache(int capacity) : _capacity(capacity){}
 
+LRUCache::~LRUCache() 
+{
+	NodePtr node = _head;
+	while (node != nullptr) {
+		NodePtr nextNode = node->_next;
+		delete node;
+		node = nextNode;
+	}
+	_head = nullptr;
+	_tail = nullptr;
 }
 
 int LRUCache::get(int key)

@@ -7,7 +7,6 @@
 struct LRUNode {
 	int _key;
 	int _value;
-	int _accessCount = 0;
 	LRUNode* _prev = nullptr;
 	LRUNode* _next = nullptr;
 
