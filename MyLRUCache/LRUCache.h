@@ -21,10 +21,10 @@ public:
 	LRUCache(int capacity, int ttl);
 	~LRUCache();
 	int get(int key);
-	void put(int key, int value);
+	void put(int key, int value, int ttl);
 
 	void remove(NodePtr node);
-	void insert(int key, int value);
+	void insert(int key, int value, time_t ttl);
 };
 
 #endif // LRUCACHE_H

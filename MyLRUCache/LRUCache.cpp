@@ -28,13 +28,15 @@ int LRUCache::get(int key)
 		}
 		// 下面完成的是删除双向链表及 hash 中原有的点，并将该节点加入最近使用的表尾 R 的前驱操作
 		remove(node);
-		insert(node->_key, node->_value);
+		// 保持节点过期时间不变
+		int timeLeft = difftime(node->_expiredTime, time(nullptr));
+		insert(node->_key, node->_value, timeLeft);
 		return node->_value;
 	}
 	else return -1;
 }
 
-void LRUCache::put(int key, int value) 
+void LRUCache::put(int key, int value, int ttl) 
 {
 	if (_map.find(key) != _map.end()) {
 		// key exists, update value
@@ -45,16 +47,28 @@ void LRUCache::put(int key, int value)
 	}
 	else {
 		// key does not exist, create new node
-		NodePtr newNode = new LRUNode(key, value);
-		_map[key] = newNode;
 		if (_map.size() > _capacity) {
-			// remove least recently used node
-			NodePtr node = _head->_next;
-			remove(node);
-			insert(key, value);
+			std::unordered_map<int, LRUNode*>::iterator it;
+			bool hasExpired = false;
+			for (it = _map.begin(); it != _map.end(); ++it) {
+				if (difftime(it->second->_expiredTime, time(nullptr)) <= 0) {
+					hasExpired = true;
+					break;
+				}
+			}
+			if (hasExpired) {
+				remove(it->second);
+				insert(key, value, ttl);
+			}
+			else {
+				// remove least recently used node
+				NodePtr node = _head->_next;
+				remove(node);
+				insert(key, value, ttl);
+			}
 		}
 		else {
-			insert(key, value);
+			insert(key, value, ttl);
 		}
 	}
 }
@@ -66,9 +80,10 @@ void LRUCache::remove(NodePtr node)
 	_map.erase(node->_key);
 }
 
-void LRUCache::insert(int key, int value) 
+void LRUCache::insert(int key, int value, time_t ttl) 
 {
-	NodePtr node = new LRUNode(key, value, time(nullptr)+_ttl);
+	NodePtr node = new LRUNode(key, value, time(nullptr)+ ttl);
+
 	_tail->_next = node;
 	node->_prev = _tail;
 	_tail = node;
