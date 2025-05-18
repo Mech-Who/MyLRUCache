@@ -2,20 +2,18 @@
 #include <ctime>
 
 using NodePtr = LRUNode*;
+using NodeMap = std::unordered_map<int, NodePtr>;
 
-LRUCache::LRUCache(int capacity, int ttl) : _capacity(capacity), _ttl(ttl){}
+LRUCache::LRUCache(int capacity) : LRUCache(capacity, 10) {}
 
-LRUCache::~LRUCache() 
-{
-	NodePtr node = _head;
-	while (node != nullptr) {
-		NodePtr nextNode = node->_next;
-		delete node;
-		node = nextNode;
-	}
-	_head = nullptr;
-	_tail = nullptr;
+LRUCache::LRUCache(int capacity, int ttl) : _capacity(capacity), _ttl(ttl){
+	_head = std::make_shared<LRUNode>(-1, -1, ttl);
+	_tail = std::make_shared<LRUNode>(-1, -1, ttl);
+	_head->_next = _tail;
+	_tail->_prev = _head;
 }
+
+LRUCache::~LRUCache(){}
 
 int LRUCache::get(int key)
 {
@@ -29,7 +27,7 @@ int LRUCache::get(int key)
 		// 下面完成的是删除双向链表及 hash 中原有的点，并将该节点加入最近使用的表尾 R 的前驱操作
 		remove(node);
 		// 保持节点过期时间不变
-		int timeLeft = difftime(node->_expiredTime, time(nullptr));
+		int timeLeft = static_cast<int>(difftime(node->_expiredTime, time(nullptr)));
 		insert(node->_key, node->_value, timeLeft);
 		return node->_value;
 	}
@@ -48,7 +46,7 @@ void LRUCache::put(int key, int value, int ttl)
 	else {
 		// key does not exist, create new node
 		if (_map.size() > _capacity) {
-			std::unordered_map<int, LRUNode*>::iterator it;
+			NodeMap::iterator it;
 			bool hasExpired = false;
 			for (it = _map.begin(); it != _map.end(); ++it) {
 				if (difftime(it->second->_expiredTime, time(nullptr)) <= 0) {
@@ -75,18 +73,21 @@ void LRUCache::put(int key, int value, int ttl)
 
 void LRUCache::remove(NodePtr node) 
 {
-	node->_prev->_next = node->_next;
+	auto prev = node->_prev.lock(); // 不能直接使用weak_ptr，要用lock()先转换为shared_ptr
+	prev->_next = node->_next;
 	node->_next->_prev = node->_prev;
+	node->_next = nullptr; // 清空next_指针，彻底断开节点与链表的连接
 	_map.erase(node->_key);
 }
 
 void LRUCache::insert(int key, int value, time_t ttl) 
 {
-	NodePtr node = new LRUNode(key, value, time(nullptr)+ ttl);
+	NodePtr node = std::make_shared<LRUNode>(key, value, time(nullptr)+ ttl);
 
-	_tail->_next = node;
-	node->_prev = _tail;
-	_tail = node;
+	node->_next = _tail;
+	node->_prev = _tail->_prev;
+	_tail->_prev.lock()->_next = node;
+	_tail->_prev = node;
 
 	_map[key] = node;
 }

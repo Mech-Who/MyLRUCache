@@ -2,18 +2,18 @@
 #ifndef LRUNODE_H
 #define LRUNODE_H
 
-//#include <memory>
+#include <memory>
 #include <cmath>
 
 struct LRUNode {
 	int _key;
 	int _value;
 	time_t  _expiredTime;
-	LRUNode* _prev = nullptr;
-	LRUNode* _next = nullptr;
+	std::weak_ptr<LRUNode> _prev;
+	std::shared_ptr<LRUNode> _next;
 
 	LRUNode() = delete;
-	LRUNode(int key, int value, time_t  expiredTime) : _key(key), _value(value), _expiredTime(expiredTime) {}
+	LRUNode(int key, int value, time_t  expiredTime) : _key(key), _value(value), _expiredTime(expiredTime){}
 };
 
 

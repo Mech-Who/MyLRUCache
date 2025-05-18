@@ -1,18 +1,23 @@
 #include "LRUCache.h"
+#include "Random.h"
 #include <iostream>
+#include <random>
 
 using namespace std;
 
 int main() 
 {
-	LRUCache* cache = new LRUCache(10);
-	vector<int> data{ 3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3 };
-	int total = data.size();
+	LRUCache* cache = new LRUCache(100);
+	vector<int> data{};
+	for (int i = 0; i < 1000; ++i) {
+		data.push_back(Random::get<int>(1, 100));
+	}
+	int total = static_cast<int>(data.size());
 	int read_disk = 0;
 	for (auto i : data) {
 		int read = -1;
 		if ((read = cache->get(i)) == -1) {
-			cache->put(i, i);
+			cache->put(i, i, 13);
 			read = i;
 			++read_disk;
 		}
