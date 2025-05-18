@@ -5,9 +5,15 @@
 #include <memory>
 #include <unordered_map>
 
+// 前向声明
 template<typename Key, typename Value>
 class LRUCache;
 
+/****************************************
+LRUNode
+
+记录缓存数据的节点类
+****************************************/
 template<typename Key, typename Value>
 struct LRUNode {
 private:
@@ -25,6 +31,12 @@ public:
 
 	friend class LRUCache<Key, Value>;
 };
+
+/****************************************
+LRUCache
+
+基于LRU算法的缓存算法
+****************************************/
 
 template<typename Key, typename Value>
 class LRUCache{
@@ -47,7 +59,7 @@ public:
 	}
 	~LRUCache()=default;
 
-	int get(Key key);
+	Value get(Key key);
 	void put(Key key, Value value);
 
 	void remove(NodePtr node);
@@ -56,7 +68,7 @@ public:
 
 
 template<typename Key, typename Value>
-int LRUCache<Key, Value>::get(Key key)
+Value LRUCache<Key, Value>::get(Key key)
 {
 	if (_map.find(key) != _map.end()) {
 		NodePtr node = _map[key];
@@ -114,6 +126,5 @@ void LRUCache<Key, Value>::insert(Key key, Value value)
 
 	_map[key] = node;
 }
-
 
 #endif // LRUCACHE_H
