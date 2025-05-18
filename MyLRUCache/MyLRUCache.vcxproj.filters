@@ -18,21 +18,15 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="LRUNode.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="LRUCache.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LRUNode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="LRUCache.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Random.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LRUKCache.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

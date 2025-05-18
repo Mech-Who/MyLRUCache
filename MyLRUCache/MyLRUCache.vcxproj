@@ -137,8 +137,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="LRUCache.cpp" />
-    <ClCompile Include="LRUNode.cpp" />
     <ClCompile Include="main.cpp">
       <SubType>
       </SubType>
@@ -146,7 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LRUCache.h" />
-    <ClInclude Include="LRUNode.h" />
+    <ClInclude Include="LRUKCache.h" />
     <ClInclude Include="Random.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
