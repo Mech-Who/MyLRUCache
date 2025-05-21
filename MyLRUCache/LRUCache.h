@@ -43,6 +43,8 @@ class LRUCache{
 private:
 	using NodePtr = std::shared_ptr<LRUNode<Key, Value>>;
 	using NodeMap = std::unordered_map<int, NodePtr>;
+	// mutex 互斥量 TODO
+	std::mutex _mutex;
 	// Cache 容量
 	int _capacity;
 	// linked list 哨兵节点，linked list按照最近访问记录节点，head指向最久未使用的节点，tail指向最近使用的节点
@@ -70,6 +72,7 @@ public:
 template<typename Key, typename Value>
 Value LRUCache<Key, Value>::get(Key key)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	if (_map.find(key) != _map.end()) {
 		NodePtr node = _map[key];
 		// 下面完成的是删除双向链表及 hash 中原有的点，并将该节点加入最近使用的表尾 R 的前驱操作
@@ -83,6 +86,7 @@ Value LRUCache<Key, Value>::get(Key key)
 template<typename Key, typename Value>
 void LRUCache<Key, Value>::put(Key key, Value value)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	if (_map.find(key) != _map.end()) {
 		// key exists, update value
 		NodePtr node = _map[key];
