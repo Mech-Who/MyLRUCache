@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <mutex>
 
 // 前向声明
 template<typename Key, typename Value>
