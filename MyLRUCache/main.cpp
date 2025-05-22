@@ -6,18 +6,35 @@
 
 using namespace std;
 
+// Test config
+const int totalData = 5000;
+const int dataMin = 1;
+const int dataMax = 200;
+// LRU cache
+const int cacheSize = 100;
+// LRU-K cache
+const int historySize = 5;
+const int maxAccessCount = 2;
+// Cache types
+using Key = int;
+using Value = int;
+
 int main() 
 {
-	std::shared_ptr<LRUCache<int, int>> cache = std::make_shared<LRUCache<int, int>>(100);
-	vector<int> data{};
-	for (int i = 0; i < 1000; ++i) {
-		data.push_back(Random::get<int>(1, 100));
+	// Cache
+	//std::shared_ptr<LRUCache<Key, Value>> cache = std::make_shared<LRUCache<Key, Value>>(cache_size);
+	std::shared_ptr<LRUKCache<Key, Value>> cache = std::make_shared<LRUKCache<Key, Value>>(cacheSize, historySize, maxAccessCount);
+	// Data
+	vector<Value> data{};
+	for (Value i = 0; i < totalData; ++i) {
+		data.push_back(Random::get<Value>(dataMin, dataMax));
 	}
+	// visit
 	int total = static_cast<int>(data.size());
 	int read_disk = 0;
 	for (auto i : data) {
-		int read = -1;
-		if ((read = cache->get(i)) == -1) {
+		Value read = -1;
+		if ((read = cache->get(i)) == Value{}) {
 			cache->put(i, i);
 			read = i;
 			++read_disk;
