@@ -235,4 +235,32 @@ void LRUKCache<Key, Value>::put(Key key, Value value)
 }
 
 
+template<typename Key, typename Value>
+class HashLRUCache {
+private:
+	int _capacity;
+	int _sliceNum;
+	std::vector<std::unique_ptr<LRUCache<Key, Value>>> _slices;
+public:
+	HashLRUCache(int capacity, int sliceNum) : _capacity(capacity), _sliceNum(sliceNum) {
+		// 初始化每个slice的LRU缓存
+		for (int i = 0; i < _sliceNum; ++i) {
+			_slices.push_back(std::make_unique<LRUCache<Key, Value>>(_capacity / _sliceNum));
+		}
+	}
+	bool get(Key key, Value& value) {
+		int index = std::hash<Key>()(key) % _sliceNum;
+		return _slices[index]->get(key);
+	}
+	Value get(Key key) {
+		Value value;
+		get(key, value);
+		return value;
+	}
+	void put(Key key, Value value) {
+		int index = std::hash<Key>()(key) % _sliceNum;
+		_slices[index]->put(key, value);
+	}
+};
+
 #endif // LRUCACHE_H
