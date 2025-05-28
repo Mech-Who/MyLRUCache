@@ -143,6 +143,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LFUCache.h" />
     <ClInclude Include="LRUCache.h" />
     <ClInclude Include="Random.h" />
   </ItemGroup>

@@ -1,4 +1,5 @@
 #include "LRUCache.h"
+#include "LFUCache.h"
 #include "Random.h"
 #include <iostream>
 #include <memory>
@@ -23,7 +24,8 @@ int main()
 {
 	// Cache
 	//std::shared_ptr<LRUCache<Key, Value>> cache = std::make_shared<LRUCache<Key, Value>>(cache_size);
-	std::shared_ptr<LRUKCache<Key, Value>> cache = std::make_shared<LRUKCache<Key, Value>>(cacheSize, historySize, maxAccessCount);
+	//std::shared_ptr<LRUKCache<Key, Value>> cache = std::make_shared<LRUKCache<Key, Value>>(cacheSize, historySize, maxAccessCount);
+	std::shared_ptr<LFUCache<Key, Value>> cache = std::make_shared<LFUCache<Key, Value>>(cacheSize);
 	// Data
 	vector<Value> data{};
 	for (Value i = 0; i < totalData; ++i) {
