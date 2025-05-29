@@ -75,11 +75,11 @@ private:
 	using FreqListPtr = std::unique_ptr<FreqList<Key, Value>>;
 
 	int _capacity;
-	int _maxFreqCount;
+	int _minFreqCount;
 	std::unordered_map<Key, NodePtr> _nodeMap;
 	std::unordered_map<int, FreqListPtr> _freqListMap;
 public:
-	LFUCache(int capacity) : _capacity(capacity), _maxFreqCount(0) {}
+	LFUCache(int capacity) : _capacity(capacity), _minFreqCount(0) {}
 
 	Value get(Key key) {
 		auto it = _nodeMap.find(key);
@@ -90,6 +90,9 @@ public:
 		int freqCount = node->getFreqCount();
 		// Remove node from current frequency list
 		remove(key);
+		if (_freqListMap[freqCount]->empty()) {
+			++_minFreqCount;
+		}
 		++freqCount;
 		insert(key, node->getValue(), freqCount);
 		return node->getValue();
@@ -118,16 +121,12 @@ public:
 			// not found
 			if (_nodeMap.size() >= _capacity) {
 				// cache is full, remove the unfrequently node
-				for (int i = 1; i <= _maxFreqCount; ++i) {
-					if (_freqListMap.find(i) != _freqListMap.end() && !_freqListMap[i]->empty()) {
-						NodePtr nodeToRemove = _freqListMap[i]->getUnfrequentNode().lock();
-						remove(nodeToRemove->getKey());
-						break;
-					}
-				}
+				auto node = _freqListMap[_minFreqCount]->getUnfrequentNode().lock();
+				remove(node->getKey());
 			}
 			// insert new node
 			insert(key, value, 1);
+			_minFreqCount = 1;
 		}
 	}
 
