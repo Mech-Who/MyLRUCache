@@ -2,6 +2,7 @@
 #ifndef LFUCACHE_H
 #define LFUCACHE_H
 
+#include <mutex>
 #include <memory>
 #include <unordered_map>
 
@@ -76,12 +77,14 @@ private:
 
 	int _capacity;
 	int _minFreqCount;
+	std::mutex _mutex;
 	std::unordered_map<Key, NodePtr> _nodeMap;
 	std::unordered_map<int, FreqListPtr> _freqListMap;
 public:
 	LFUCache(int capacity) : _capacity(capacity), _minFreqCount(0) {}
 
 	Value get(Key key) {
+		std::lock_guard<std::mutex> lock(_mutex);
 		auto it = _nodeMap.find(key);
 		if (it == _nodeMap.end()) {
 			return Value(); // Not found
@@ -107,6 +110,7 @@ public:
 	}
 
 	void put(Key key, Value value) {
+		std::lock_guard<std::mutex> lock(_mutex);
 		auto it = _nodeMap.find(key);
 		if (it != _nodeMap.end()) {
 			// found
