@@ -7,72 +7,64 @@
 #include <unordered_map>
 
 template<typename Key, typename Value>
-class FreqList;
-
-template<typename Key, typename Value>
-class LFUNode {
-private:
-	Key _key;
-	Value _value;
-	int _freqCount;
-	std::weak_ptr<LFUNode<Key, Value>> _prev;
-	std::shared_ptr<LFUNode<Key, Value>> _next;
-public:
-	LFUNode() = delete;
-	LFUNode(Key key, Value value, int freqCount=1) : _key(key), _value(value), _freqCount(freqCount) {}
-
-	inline Value getValue() { return _value; }
-	inline void setValue(Value value) { _value = value; }
-	inline Key getKey() { return _key; }
-	inline int getFreqCount() { return _freqCount; }
-
-	friend class FreqList<Key, Value>;
-};
+class LFUCache;
 
 template<typename Key, typename Value>
 class FreqList {
 private:
-	std::shared_ptr<LFUNode<Key, Value>> _head;
-	std::shared_ptr<LFUNode<Key, Value>> _tail;
+	struct LFUNode {
+		Key _key;
+		Value _value;
+		int _freqCount;
+		std::weak_ptr<LFUNode> _prev;
+		std::shared_ptr<LFUNode> _next;
+
+		LFUNode() : _freqCount(1), _next(nullptr) {}
+		LFUNode(Key key, Value value, int freqCount = 1) : _key(key), _value(value), _freqCount(freqCount) {}
+	};
+
+	using NodePtr = std::shared_ptr<LFUNode>;
+
 	int _freqCount;
+	NodePtr _head;
+	NodePtr _tail;
 public:
 	FreqList() = delete;
-	FreqList(int freqCount) : _freqCount(freqCount) {
-		_head = std::make_shared<LFUNode<Key, Value>>(-1, -1);
-		_tail = std::make_shared<LFUNode<Key, Value>>(-1, -1);
+	explicit FreqList(int freqCount) : _freqCount(freqCount) {
+		_head = std::make_shared<LFUNode>(-1, -1);
+		_tail = std::make_shared<LFUNode>(-1, -1);
 		_head->_next = _tail;
 		_tail->_prev = _head;
 	}
 
-	void insert(std::shared_ptr<LFUNode<Key, Value>> node) {
+	void insert(NodePtr node) {
 		_head->_next->_prev.lock() = node;
 		node->_next = _head->_next;
 		_head->_next = node;
 		node->_prev = _head;
 	}
-	void remove(std::shared_ptr<LFUNode<Key, Value>> node) {
+	void remove(NodePtr node) {
 		node->_prev.lock()->_next = node->_next;
 		node->_next->_prev = node->_prev;
-		/*node->_prev = nullptr;
-		node->_next = nullptr;*/
+		node->_next = nullptr;
 	}
 
-	bool empty() {
+	bool empty() const {
 		return _head->_next == _tail;
 	}
 
-	std::weak_ptr<LFUNode<Key, Value>> getUnfrequentNode() {
-		if (empty()) {
-			throw std::runtime_error("FreqList is empty!");
-		}
+	std::weak_ptr<LFUNode> getUnfrequentNode() const {
 		return _tail->_prev;
 	}
+
+	friend class LFUCache<Key, Value>;
 };
 
 template<typename Key, typename Value>
 class LFUCache {
 private:
-	using NodePtr = std::shared_ptr<LFUNode<Key, Value>>;
+	using LFUNode = typename FreqList<Key, Value>::LFUNode;
+	using NodePtr = std::shared_ptr<LFUNode>;
 	using FreqListPtr = std::unique_ptr<FreqList<Key, Value>>;
 
 	int _capacity;
@@ -80,6 +72,25 @@ private:
 	std::mutex _mutex;
 	std::unordered_map<Key, NodePtr> _nodeMap;
 	std::unordered_map<int, FreqListPtr> _freqListMap;
+
+	void insert(Key key, Value value, int freqCount) {
+		NodePtr node = std::make_shared<LFUNode>(key, value, freqCount);
+		_nodeMap[key] = node;
+		if (_freqListMap.find(freqCount) == _freqListMap.end()) {
+			_freqListMap[freqCount] = std::make_unique<FreqList<Key, Value>>(freqCount);
+		}
+		_freqListMap[freqCount]->insert(node);
+	}
+
+	void remove(Key key) {
+		auto it = _nodeMap.find(key);
+		if (it != _nodeMap.end()) {
+			NodePtr node = it->second;
+			int freqCount = node->_freqCount;
+			_freqListMap[freqCount]->remove(node);
+			_nodeMap.erase(it);
+		}
+	}
 public:
 	LFUCache(int capacity) : _capacity(capacity), _minFreqCount(0) {}
 
@@ -90,15 +101,15 @@ public:
 			return Value(); // Not found
 		}
 		NodePtr node = it->second;
-		int freqCount = node->getFreqCount();
+		int freqCount = node->_freqCount;
 		// Remove node from current frequency list
 		remove(key);
 		if (_freqListMap[freqCount]->empty()) {
 			++_minFreqCount;
 		}
 		++freqCount;
-		insert(key, node->getValue(), freqCount);
-		return node->getValue();
+		insert(key, node->_value, freqCount);
+		return node->_value;
 	}
 
 	bool get(Key key, Value& value) {
@@ -115,8 +126,8 @@ public:
 		if (it != _nodeMap.end()) {
 			// found
 			NodePtr node = it->second;
-			node->setValue(value);
-			int freqCount = node->getFreqCount();
+			node->_value = value;
+			int freqCount = node->_freqCount;
 			remove(key);
 			++freqCount;
 			insert(key, value, freqCount);
@@ -126,31 +137,11 @@ public:
 			if (_nodeMap.size() >= _capacity) {
 				// cache is full, remove the unfrequently node
 				auto node = _freqListMap[_minFreqCount]->getUnfrequentNode().lock();
-				remove(node->getKey());
+				remove(node->_key);
 			}
 			// insert new node
 			insert(key, value, 1);
 			_minFreqCount = 1;
-		}
-	}
-
-	void insert(Key key, Value value, int freqCount) {
-		NodePtr node = std::make_shared<LFUNode<Key, Value>>(key, value, freqCount);
-		_nodeMap[key] = node;
-		if (_freqListMap.find(freqCount) == _freqListMap.end()) {
-			_freqListMap[freqCount] = std::make_unique<FreqList<Key, Value>>(freqCount);
-		}
-		_freqListMap[freqCount]->insert(node);
-		if (freqCount > _maxFreqCount)
-			_maxFreqCount = freqCount;
-	}
-	void remove(Key key) {
-		auto it = _nodeMap.find(key);
-		if (it != _nodeMap.end()) {
-			NodePtr node = it->second;
-			int freqCount = node->getFreqCount();
-			_freqListMap[freqCount]->remove(node);
-			_nodeMap.erase(it);
 		}
 	}
 };
