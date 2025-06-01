@@ -25,7 +25,8 @@ int main()
 	// Cache
 	//std::shared_ptr<LRUCache<Key, Value>> cache = std::make_shared<LRUCache<Key, Value>>(cache_size);
 	//std::shared_ptr<LRUKCache<Key, Value>> cache = std::make_shared<LRUKCache<Key, Value>>(cacheSize, historySize, maxAccessCount);
-	std::shared_ptr<LFUCache<Key, Value>> cache = std::make_shared<LFUCache<Key, Value>>(cacheSize);
+	//std::shared_ptr<LFUCache<Key, Value>> cache = std::make_shared<LFUCache<Key, Value>>(cacheSize);
+	std::shared_ptr<AlignLFUCache<Key, Value>> cache = std::make_shared<AlignLFUCache<Key, Value>>(cacheSize, 5);
 	// Data
 	vector<Value> data{};
 	for (Value i = 0; i < totalData; ++i) {
@@ -43,6 +44,7 @@ int main()
 		}
 		std::cout << i << " ";
 	}
+
 	std::cout << std::endl;
 	std::cout << "Total: " << total << " , Read disk：" << read_disk << ", hit_rate: " << (total - read_disk) / (1.0 * total) * 100 << "%" << std::endl;
 	return 0;
