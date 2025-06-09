@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\ARCCache">
+      <UniqueIdentifier>{375c795d-f2d9-4c49-8557-ce3fe703ea5b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -28,6 +31,15 @@
     </ClInclude>
     <ClInclude Include="LFUCache.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ARCNode.h">
+      <Filter>头文件\ARCCache</Filter>
+    </ClInclude>
+    <ClInclude Include="ARCLinkList.h">
+      <Filter>头文件\ARCCache</Filter>
+    </ClInclude>
+    <ClInclude Include="ARCCache.h">
+      <Filter>头文件\ARCCache</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
